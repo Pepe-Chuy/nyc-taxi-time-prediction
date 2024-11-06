@@ -1,6 +1,5 @@
 import pickle
 import mlflow
-import dagshub
 from fastapi import FastAPI
 from pydantic import BaseModel
 from mlflow import MlflowClient
@@ -10,23 +9,23 @@ from mlflow import MlflowClient
 dagshub_repo = "https://dagshub.com/Pepe-Chuy/nyc-taxi-time-prediction"
 # dagshub_repo = "https://dagshub.com/Pepe-Chuy/nyc-taxi-time-prediction"
 
-dagshub.init(url=dagshub_repo, mlflow=True)
-
-MLFLOW_TRACKING_URI = mlflow.get_tracking_uri()
+#MLFLOW_TRACKING_URI = mlflow.get_tracking_uri()
+MLFLOW_TRACKING_URI = "https://dagshub.com/Pepe-Chuy/nyc-taxi-time-prediction.mlflow"
 
 mlflow.set_tracking_uri(uri=MLFLOW_TRACKING_URI)
 client = MlflowClient(tracking_uri=MLFLOW_TRACKING_URI)
 
 run_ = mlflow.search_runs(order_by=['metrics.rmse ASC'],
                           output_format="list",
-                          experiment_names=["nyc-taxi-experiment"]
+                          experiment_names=["nyc-taxi-experiment-prefect"]
                           )[0]
+
 run_id = run_.info.run_id
 
 run_uri = f"runs:/{run_id}/preprocessor"
 
 client.download_artifacts(
-    run_id='30cfd1911c9f49c6ad902587bf61c8fb',
+    run_id=run_id,
     path='preprocessor',
     dst_path='.'
 )
@@ -54,9 +53,9 @@ def preprocess(input_data):
 
 def predict(input_data):
 
-    X_val = preprocess(input_data)
+    X_pred = preprocess(input_data)
 
-    return champion_model.predict(X_val)
+    return champion_model.predict(X_pred)
 
 
 app = FastAPI()
@@ -66,11 +65,11 @@ class InputData(BaseModel):
     DOLocationID: str
     trip_distance: float
 
-@app.get("/")
-def greet():
-    return {"status":"ok"}
 
 @app.post("/predict")
 def predict_endpoint(input_data: InputData):
     result = predict(input_data)[0]
-    return {"prediction": float(result)}
+
+    return {
+        "prediction": float(result)
+    }
