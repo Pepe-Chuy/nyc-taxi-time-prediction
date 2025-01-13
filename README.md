@@ -1,7 +1,3 @@
-Here's a polished README for your NYC Taxi Time Prediction project:
-
----
-
 # NYC Taxi Time Prediction  
 
 This project focuses on the deployment and integration of various frameworks to streamline experimentation, versioning, retraining, and deployment processes for predicting NYC taxi ride times.  
